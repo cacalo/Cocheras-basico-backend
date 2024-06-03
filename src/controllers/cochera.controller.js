@@ -5,8 +5,7 @@ const getAll = async (req, res) => {
   await db.all(`SELECT * from ${tabla} WHERE eliminada = 0`, (error,rows)=>{
     if (error) {
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
     console.log(rows)
     return res.send(rows)
@@ -17,8 +16,7 @@ const getById = async (req, res) => {
   await db.get(`SELECT * from ${tabla} WHERE (id= ? ) and (eliminada=0)`,req.params.id, (error,row)=>{
     if (error) {
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
     if (!row) return res.json({ message: "Elemento inexistente" });
     return res.send(row)
@@ -32,8 +30,7 @@ const set = async (req, res) => {
   await db.run(`INSERT into ${tabla} SET ?`,req.body,function(error) {
       if(error){
         res.status(500);
-        res.send(error.message);
-        throw error;
+        return res.send(error.message);
       }
       return res.json({ message: "Cochera añadida con éxito",id:this.lastID });
     }
@@ -52,8 +49,7 @@ const update = async (req, res) => {
     `UPDATE ${tabla} SET ? WHERE id = ?`,[req.body,req.params.id], function (error) {
       if(error){
         res.status(500);
-        res.send(error.message);
-        throw error;
+        return res.send(error.message);
       }
       if(this.changes) return res.json({ message: "Ítem actualizado con éxito" });
       res.status(404);
@@ -68,8 +64,7 @@ const disable = async (req, res) => {
       `UPDATE ${tabla} SET DESHABILITADA = 1 WHERE id = ?`,req.params.id, function (error){
         if(error){
           res.status(500);
-          res.send(error.message);
-          throw error;
+          return res.send(error.message);
         }
         if(this.changes) return res.json({ message: "Cochera deshabilitada con éxito" });
         res.status(404);
@@ -84,8 +79,7 @@ const enable = async (req, res) => {
     `UPDATE ${tabla} SET DESHABILITADA = 0 WHERE id = ?`,req.params.id,function (error){
       if(error){
         res.status(500);
-        res.send(error.message);
-        throw error;
+        return res.send(error.message);
       }
       if(this.changes) return res.json({ message: "Ítem restaurado con éxito" });
       res.status(404);
@@ -100,8 +94,7 @@ const softDelete = async (req, res) => {
     `UPDATE ${tabla} SET ELIMINADA = 1 WHERE id = ?`, req.params.id, function (error){
       if(error){
         res.status(500);
-        res.send(error.message);
-        throw error;
+        return res.send(error.message);
       }
       if(this.changes) return res.json({ message: "Cochera eliminado con éxito" });
       res.status(404);
@@ -115,8 +108,7 @@ db.run(
   `UPDATE ${tabla} SET ELIMINADA = 0 WHERE (id = ?)`, req.params.id, function (error){
     if(error){
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
     if(this.changes) return res.json({ message: "Cochera restaurado con éxito" });
       res.status(404);

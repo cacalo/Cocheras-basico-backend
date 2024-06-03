@@ -5,8 +5,7 @@ const getAll = async (req, res) => {
   await db.all(`SELECT * from ${tabla} WHERE eliminado = 0`, (error,rows)=>{
     if (error) {
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
     return res.send(rows)
   });
@@ -16,8 +15,7 @@ const getById = async (req, res) => {
   await db.all(`SELECT * from ${tabla} WHERE (id= ? ) and (eliminado=0)`, (error,rows)=>{
     if (error) {
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
     if (rows.length === 0) return res.json({ message: "Elemento inexistente" });
     return res.send(rows)
@@ -29,8 +27,7 @@ const getByUsername = async (req, res) => {
   await db.get(`SELECT * from ${tabla} WHERE (username= ? ) and (eliminado=0)`,req.params.username, (error,row)=>{
     if (error) {
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
     if (!row) return res.json({ message: "Elemento inexistente" });
     return res.send(row)
@@ -47,8 +44,7 @@ const set = async (req, res) => {
     (error,row) => {
       if (error) {
         res.status(500);
-        res.send(error.message);
-        throw error;
+        return res.send(error.message);
       }
       return res.json({ message: "Ítem añadido con éxito", row });
     }
@@ -64,8 +60,7 @@ const update = async (req, res) => {
       `UPDATE ${tabla} SET ? WHERE id = ?`,[req.body,req.params.id], function (error){
         if(error){
           res.status(500);
-          res.send(error.message);
-          throw error;
+          return res.send(error.message);
         }
         res.json({ message: "Ítem modificado con éxito", id: this.lastID });
   })

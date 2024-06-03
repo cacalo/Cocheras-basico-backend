@@ -5,8 +5,7 @@ const router=Router();
 
 router.get("/estacionamientos",estacionamientoController.getAll);
 router.get("/estacionamientos/:id",estacionamientoController.getById);
-router.post("/estacionamientos",estacionamientoController.set);
-router.put("/estacionamientos/:id",estacionamientoController.update);
-router.delete("/estacionamientos/:id",estacionamientoController.disable);
+router.post("/estacionamientos/abrir",estacionamientoController.abrir);
+router.patch("/estacionamientos/cerrar",estacionamientoController.cerrar);
 
 export default router;

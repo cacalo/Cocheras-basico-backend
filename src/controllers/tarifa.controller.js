@@ -3,11 +3,7 @@ const tabla="tarifa"
 
 const getAll = async (req, res) => {
   await db.all(`SELECT * from ${tabla}`, (error,rows)=>{
-    if (error) {
-      res.status(500);
-      res.send(error.message);
-      throw error;
-    }
+    if (error) return res.status(500).send(error.message);
     return res.send(rows)
   });
 };
@@ -24,8 +20,7 @@ const update = async (req, res) => {
       `UPDATE ${tabla} SET VALOR = ? WHERE id = ?`,[req.body.valor,req.params.id], function (error){
         if(error){
           res.status(500);
-          res.send(error.message);
-          throw error;
+          return res.send(error.message);
         };
         if(this.changes) return res.json({ message: "Tarifa modificada con éxito"});
         res.status(404);

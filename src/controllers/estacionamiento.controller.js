@@ -5,8 +5,7 @@ const getAll = async (req, res) => {
   await db.all(`SELECT * from ${tabla} WHERE eliminado = 0`, (error,rows)=>{
     if (error) {
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
     return res.send(rows)
   });
@@ -16,101 +15,118 @@ const getById = async (req, res) => {
   await db.get(`SELECT * from ${tabla} WHERE (id= ? ) and (eliminado=0)`, (error,row)=>{
     if (error) {
       res.status(500);
-      res.send(error.message);
-      throw error;
+      return res.send(error.message);
     }
-    if (!row) return res.json({ message: "Elemento inexistente" });
+    if (!row) return res.json({ message: "Registro de estacionamiento inexistente" });
     return res.send(row)
   });
 };
 
-const getByUsername = async (req, res) => {
-  console.log(req.params.username)
-  await db.all(`SELECT * from ${tabla} WHERE (username= ? ) and (eliminado=0)`,req.params.username, (error,rows)=>{
-    if (error) {
-      res.status(500);
-      res.send(error.message);
-      throw error;
-    }
-    if (rows.length === 0) return res.json({ message: "Elemento inexistente" });
-    return res.send(rows[0])
-  });
-};
 
-// EN DESUSO
-const set = async (req, res) => {
-  try {
-    if (req.body.nombre === undefined) {
-      return res.status(400).json({ message: "Por favor completar el nombre del producto" });
-    }
-    const connection = await getConnection();
-    const result = await connection.query(
-      `INSERT into ${tabla} SET ?`,
-      req.body
-    );
-    res.json({ message: "Ítem añadido con éxito", id: result.insertId });
-  } catch (error) {
-    res.status(500);
-    res.send(error.message);
+/** Crea un nuevo registro de estacionamiento sin horario de cierre ni costo */
+const abrir = async (req, res) => {
+  try{
+    if(!req.body.patente) return res.json({message:"Falta el valor de patente"});
+    if(!req.body.idUsuarioIngreso) return res.json({message:"Falta el valor de idUsuarioIngreso"});
+    if(!req.body.idCochera) return res.json({message:"Falta el valor de idCochera"});
+                
+    await db.get(`SELECT * from ${tabla} WHERE (eliminado IS NOT 1) AND (idCochera = ?) AND (horaEgreso IS NULL)`,req.body.idCochera, async (error,row)=>{
+      if (error) {
+        res.status(500);
+        return res.send(error.message);
+      }
+      if(row) return res.json({ message: "No se puede abrir una cochera que ya está abierta (La cochera está ocupada)"});
+      await db.run(`INSERT into ${tabla} (patente, idCochera, idUsuarioIngreso, horaIngreso) VALUES (?, ?, ?, DATETIME('now', 'localtime'))`,
+        [req.body.patente,
+        req.body.idCochera,
+        req.body.idUsuarioIngreso],
+        function (error) {
+        if (error) {
+          res.status(500);
+          return res.send(error.message);
+        }
+        if(!this.lastID) res.json({ message: "No se pudo abrir el estacionamiento" });
+        return res.json({ message: `Cochera ${req.body.idCochera} abierta`, id: this.lastID });
+      });
+    });
+  } catch(err){
+    return res.json({message:"Error inesperado",err})
   }
 };
 
-// EN DESUSO
-const update = async (req, res) => {
+/** Da un horario de cierre al estacionamiento y le pone el costo */
+const cerrar = async (req, res) => {
   try {
-    if (req.params.id === undefined) {
-      //No se debería ejecutar nunca esta línea :/
-      return res.status(400).json({ message: "El ID es necesario" });
-    }
-    const connection = await getConnection();
-    const result = await connection.query(
-      `UPDATE ${tabla} SET ? WHERE id = ?`,[req.body,req.params.id]);
-    res.json({ message: "Ítem modificado con éxito", id: result.insertId });  } catch (error) {
+    if(!req.body.patente) return res.json({message:"Falta el valor de patente"});
+    if(!req.body.idUsuarioEgreso) return res.json({message:"Falta el valor de idUsuarioEgreso"});
+
+    //Busco que haya una cochera abierta para la patente buscada
+    await db.get(`SELECT * from ${tabla} WHERE (eliminado IS NOT 1) AND (patente = ?) AND (horaEgreso IS NULL)`,req.body.patente, async (error,row)=>{
+      if (error) {
+        res.status(500);
+        return res.send(error.message);
+      }
+      if(!row) {
+        res.status(403)
+        return res.json({ message: "La patente actual no tiene un estacionamiento activo"});
+      }
+      const minutosPasados =  (new Date().getTime() - new Date(row.horaIngreso).getTime()) /1000 /60;
+      let tarifaABuscar;
+      if(minutosPasados <= 30){
+        tarifaABuscar = "MEDIAHORA"
+      } else if (minutosPasados <= 60){
+        tarifaABuscar = "PRIMERAHORA"
+      } else {
+        tarifaABuscar = "VALORHORA"
+      }
+      // Busco las tarifas para calcular el costo
+      await db.get(`SELECT * from tarifa WHERE (id = ?)`,tarifaABuscar, async (error,rowTarifa)=>{
+        if (error) {
+          returnres.status(500).send(error.message);
+        }
+        if(!rowTarifa) {
+          return res.status(403).json({ message: "No se encuentra la tarifa para cobrar"});
+        }
+      
+        //Calculo el costo del estacionamiento
+        let costo;
+        switch (tarifaABuscar){
+          case "MEDIAHORA":
+          case "PRIMERAHORA":
+            costo = rowTarifa.valor;
+            break;
+          case "VALORHORA":
+            costo = rowTarifa.valor / 60 * minutosPasados;
+            break;
+          default:
+            costo = 0;
+        }
+
+        // Hago el cierre de la cochera
+        await db.run(
+          `UPDATE ${tabla} SET idUsuarioEgreso = ?, horaEgreso = DATETIME('now', 'localtime'), costo = ? WHERE id = ?`,[req.body.idUsuarioEgreso,costo,row.id],function(error) {
+            if(error){
+              res.status(500);
+              return res.send(error.message);
+            }
+            if(!this.changes) {
+              res.status(403)
+              return res.json({message:"Error indefinido cerrando cochera"})
+            };
+            return res.json({ message: `Cochera para patente ${req.body.patente} cerrada con éxito`});  
+          })
+        }
+    )}
+)}
+  catch (error) {
     res.status(500);
-    res.send(error.message);
+    res.send(error);
   }
 };
-
-// EN DESUSO
-const disable = async (req, res) => {
-  try {
-    const connection = await getConnection();
-    const result = await connection.query(
-      `UPDATE ${tabla} SET ? WHERE (id = ?) and (deleted=0)`,[{deleted:1},req.params.id]);
-    if(result.affectedRows === 0){
-      return res.json({ message: "No se encontró un registro con ese ID" });
-    }
-    res.json({ message: "Ítem eliminado"});
-  } catch (error) {
-    res.status(500);
-    res.send(error.message);
-  }
-};
-
-// EN DESUSO
-const restore = async (req, res) => {
-  try {
-    const connection = await getConnection();
-    const result = await connection.query(
-      "UPDATE producto SET ? WHERE id = ?",[{deleted:0},req.params.id]);
-    if(result.affectedRows === 0){
-      return res.json({ message: "No se encontró un registro con ese ID" });
-    }
-    res.json({ message: "Ítem eliminado"});
-  } catch (error) {
-    res.status(500);
-    res.send(error.message);
-  }
-};
-
-
 
 export const methods = {
   getAll,
   getById,
-  set,
-  disable,
-  update,
-  restore,
-  getByUsername,
+  abrir,
+  cerrar,
 };
