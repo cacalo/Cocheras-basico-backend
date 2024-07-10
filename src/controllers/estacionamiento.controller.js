@@ -1,4 +1,4 @@
-import { db } from "../database";
+import { db } from "../services/database";
 const tabla="estacionamiento"
 
 const getAll = async (req, res) => {
@@ -22,7 +22,7 @@ const getById = async (req, res) => {
 const abrir = async (req, res) => {
   try{
     if(!req.body.patente) return res.json({message:"Falta el valor de patente"});
-    if(!req.body.idUsuarioIngreso) return res.json({message:"Falta el valor de idUsuarioIngreso"});
+    if(!req.body.username) return res.json({message:"Falta el valor de idUsuarioIngreso"});
     if(!req.body.idCochera) return res.json({message:"Falta el valor de idCochera"});
                 
     await db.get(`SELECT * from ${tabla} WHERE (eliminado IS NOT 1) AND (idCochera = ?) AND (horaEgreso IS NULL)`,req.body.idCochera, async (error,row)=>{

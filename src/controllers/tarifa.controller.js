@@ -1,4 +1,4 @@
-import { db } from "../database";
+import { db } from "../services/database";
 const tabla="tarifa"
 
 const getAll = async (req, res) => {

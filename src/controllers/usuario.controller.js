@@ -1,5 +1,5 @@
-import { db } from "../database";
-import {revisarPropiedadObligatoria} from "./../helpers/revisarPropiedadObligatoria"
+import { revisarPropiedadObligatoria } from "./../helpers/revisarPropiedadObligatoria"
+import { db } from "../services/database";
 const tabla="usuario"
 
 const getAll = async (req, res) => {
@@ -25,30 +25,14 @@ const getByUsername = async (req, res) => {
   });
 };
 
-const set = async (req, res) => {
-  revisarPropiedadObligatoria(["username","nombre","apellido","password"],req.body,res);
-  const nuevoUsuario = {
-    username: req.body.username,
-    nombre: req.body.nombre,
-    apellido: req.body.apellido,
-    password: req.body.password,
-    eliminado: 0,
-    esAdmin: 0,
-  }
-  // Verifico que no exista ese nombre de usuario
-  await db.get(`SELECT username from ${tabla} WHERE (username= ? )`,req.body.username, async (error,row)=>{
+/** Busca un usuario en la DB pero no envía una respuesta al front */
+export const getByUsername_noResponse = async (req, res) => {
+  await db.get(`SELECT * from ${tabla} WHERE (username= ? ) and (eliminado=0)`,req.params.username, (error,row)=>{
     if (error) return res.status(500).send(error.message);
-    if (row) return res.status(503).send("El usuario que se intenta agregar ya existe");
-    await db.run(
-      `INSERT into ${tabla} VALUES (?,?,?,?,?,?)`,
-      [nuevoUsuario.username,nuevoUsuario.nombre,nuevoUsuario.apellido,nuevoUsuario.password,nuevoUsuario.eliminado,nuevoUsuario.esAdmin],
-      (error,row) => {
-        if (error) return res.status(500).send(error.message);
-        return res.status(201).json({ message: "Ítem añadido con éxito", row });
-      }
-    );
-  })
-}
+    if (!row) return res.status(404).json({ message: "Elemento inexistente" });
+    return row;
+  });
+};
 
 const update = async (req, res) => {
   revisarPropiedadObligatoria("username",req.params,res);
@@ -93,9 +77,8 @@ const undelete = async (req, res) => {
 export const methods = {
   getAll,
   getById,
-  set,
   update,
   getByUsername,
   softDelete,
-  undelete
+  undelete,
 };

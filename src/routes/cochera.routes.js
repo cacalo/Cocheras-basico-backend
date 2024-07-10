@@ -1,14 +1,15 @@
 import { Router } from "express";
 import {methods as cocheraController} from "../controllers/cochera.controller";
+import {methods as authorization} from "./../middlewares/authorization";
 
 const router=Router();
 
-router.get("/cocheras",cocheraController.getAll);
-router.get("/cocheras/:id",cocheraController.getById);
-router.post("/cocheras",cocheraController.set);
-router.delete("/cocheras/:id",cocheraController.softDelete);
-router.put("/cocheras/:id",cocheraController.update);
-router.post("/cocheras/:id/disable",cocheraController.disable);
-router.post("/cocheras/:id/enable",cocheraController.enable);
+router.get("/cocheras",authorization.soloPrivate,cocheraController.getAll);
+router.get("/cocheras/:id",authorization.soloPrivate,cocheraController.getById);
+router.post("/cocheras",authorization.soloPrivate,cocheraController.set);
+router.delete("/cocheras/:id",authorization.soloPrivate,cocheraController.softDelete);
+router.put("/cocheras/:id",authorization.soloPrivate,cocheraController.update);
+router.post("/cocheras/:id/disable",authorization.soloPrivate,cocheraController.disable);
+router.post("/cocheras/:id/enable",authorization.soloPrivate,cocheraController.enable);
 
 export default router;
