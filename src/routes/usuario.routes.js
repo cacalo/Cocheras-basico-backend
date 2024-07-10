@@ -7,6 +7,6 @@ router.get("/usuarios",usuarioController.getAll);
 router.get("/usuarios/:username",usuarioController.getByUsername);
 // router.get("/usuarios/:id",usuarioController.getById);
 router.post("/usuarios",usuarioController.set);
-router.put("/usuarios/:id",usuarioController.update);
+router.put("/usuarios/:username",usuarioController.update);
 
 export default router;
