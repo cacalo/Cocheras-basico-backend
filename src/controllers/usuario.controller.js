@@ -65,6 +65,30 @@ const update = async (req, res) => {
   })
 };
 
+const softDelete = async (req, res) => {
+  db.run(
+    `UPDATE ${tabla} SET ELIMINADO = 1 WHERE username = ?`, req.params.username, function (error){
+      if(error){
+        return res.status(500).send(error.message);
+      }
+      if(this.changes) return res.json({ message: "Usuario eliminado con éxito" });
+      return res.status(404).json({message: "No hubo ningún cambio o no se encontró ningun usuario para eliminar"});
+    }
+  )
+}
+
+const undelete = async (req, res) => {
+  db.run(
+    `UPDATE ${tabla} SET ELIMINADO = 0 WHERE (username = ?)`, req.params.username, function (error){
+      if(error){
+        return res.status(500).send(error.message);
+      }
+      if(this.changes) return res.json({ message: "Usuario restaurado con éxito" });
+      return res.status(404).json({message: "No hubo ningún cambio o no se encontró ningun usuario para restaurar"});
+    }
+  )
+}
+
 
 export const methods = {
   getAll,
@@ -72,4 +96,6 @@ export const methods = {
   set,
   update,
   getByUsername,
+  softDelete,
+  undelete
 };
