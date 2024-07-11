@@ -4,6 +4,8 @@ import dotenv from "dotenv";
 dotenv.config();
 
 function soloAdmin(req,res,next){
+  delete req.body.username;
+  delete req.body.esAdmin;
   const user = buscarDatosUsuarios(req);
   if(user.username && user.esAdmin){ 
     req.body.username = user.username;
@@ -14,6 +16,8 @@ function soloAdmin(req,res,next){
 }
 
 function soloPrivate(req,res,next){
+  delete req.body.username;
+  delete req.body.esAdmin;
   const user = buscarDatosUsuarios(req);
   if(user.username) {
     req.body.username = user.username;
