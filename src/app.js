@@ -19,7 +19,7 @@ app.set("port",4000);
 app.use(morgan("dev"));
 app.use(express.json())
 app.use(cors({
-  origin: ["http://127.0.0.1:5500"]
+  origin: "*"
 }));
 app.use(cookieParser())
 
