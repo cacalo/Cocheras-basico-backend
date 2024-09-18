@@ -38,8 +38,6 @@ const register = async (req,res) => {
 }
 
 const login = async (req,res) => {
-  console.log(req.body);
-  console.log("REQ",req.body)
   const user = req.body.username;
   const password = req.body.password;
   if(revisarPropiedadObligatoria(["username","password"],req.body,res))return;
@@ -60,7 +58,8 @@ const login = async (req,res) => {
   
       const cookieOption = {
         expires: new Date(Date.now() + process.env.JWT_COOKIE_EXPIRES * 24 * 60 * 60 * 1000),
-        path: "/"
+        path: "/",
+        SameSite: "Lax"
       }
       res.cookie("jwt",token,cookieOption);
       res.send({status:"ok",mensaje:"Usuario loggeado",token});
