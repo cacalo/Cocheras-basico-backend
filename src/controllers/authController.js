@@ -8,7 +8,7 @@ const tabla="usuario"
 dotenv.config();
 
 const register = async (req,res) => {
-  revisarPropiedadObligatoria(["username","nombre","apellido","password"],req.body,res);
+  if(revisarPropiedadObligatoria(["username","nombre","apellido","password"],req.body,res))return;;
   const nuevoUsuario = {
     username: req.body.username,
     nombre: req.body.nombre,
@@ -39,9 +39,11 @@ const register = async (req,res) => {
 
 const login = async (req,res) => {
   console.log(req.body);
+  console.log("REQ",req.body)
   const user = req.body.username;
   const password = req.body.password;
-  revisarPropiedadObligatoria(["username","password"],req.body,res);
+  if(revisarPropiedadObligatoria(["username","password"],req.body,res))return;
+
 
   await db.get(`SELECT * from ${tabla} WHERE (username= ?) and (eliminado=0)`,user, async (error,row)=>{
     if (error) return res.status(500).send(error.message);

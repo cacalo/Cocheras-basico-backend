@@ -35,8 +35,8 @@ export const getByUsername_noResponse = async (req, res) => {
 };
 
 const update = async (req, res) => {
-  revisarPropiedadObligatoria("username",req.params,res);
-  revisarPropiedadObligatoria(["nombre","apellido","password"],req.body,res);
+  if(revisarPropiedadObligatoria("username",req.params,res))return;
+  if(revisarPropiedadObligatoria(["nombre","apellido","password"],req.body,res))return;
   await db.get(`SELECT username from ${tabla} WHERE (username= ? )`,req.params.username, async (error,row)=>{
     if (error) return res.status(500).send(error.message);
     if (!row) return res.status(503).send("El usuario que se desea actualizar no existe");
