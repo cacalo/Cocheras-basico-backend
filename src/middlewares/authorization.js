@@ -16,7 +16,7 @@ function soloAdmin(req,res,next){
 }
 
 function soloPrivate(req,res,next){
-  if(!req.authorization && !req.headers.authorization) return res.sendStatus(401)
+  if(!req.headers.authorization && !req.headers.authorization) return res.sendStatus(401)
   delete req.body.username;
   delete req.body.esAdmin;
   const user = buscarDatosUsuarios(req);
