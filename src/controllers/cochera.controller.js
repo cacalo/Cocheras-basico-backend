@@ -64,7 +64,7 @@ const disable = async (req, res) => {
 
 const enable = async (req, res) => {
   db.run(
-    `UPDATE ${tabla} SET DESHABILITADA IS NOT 0 WHERE id = ?`,req.params.id,function (error){
+    `UPDATE ${tabla} SET DESHABILITADA = 0 WHERE id = ?`,req.params.id,function (error){
       if(error){
         res.status(500);
         return res.send(error.message);
