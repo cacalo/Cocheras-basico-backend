@@ -85,7 +85,7 @@ const cerrar = async (req, res) => {
           `UPDATE ${tabla} SET idUsuarioEgreso = ?, horaEgreso = DATETIME('now', 'localtime'), costo = ? WHERE id = ?`,[req.body.username,costo,row.id],function(error) {
             if(error) res.status(500).send(error.message);
             if(!this.changes) res.status(500).json({message:"Error indefinido cerrando cochera"})
-            return res.json({ message: `Cochera para patente ${req.body.patente} cerrada con éxito`});  
+            return res.json({ message: `Cochera para patente ${req.body.patente} cerrada con éxito`,costo:costo});  
           })
         }
     )}
