@@ -31,7 +31,7 @@ const abrir = async (req, res) => {
       await db.run(`INSERT into ${tabla} (patente, idCochera, idUsuarioIngreso, horaIngreso) VALUES (?, ?, ?, DATETIME('now', 'localtime'))`,
         [req.body.patente,
         req.body.idCochera,
-        req.body.idUsuarioIngreso],
+        req.body.username],
         function (error) {
         if (error) return res.status(500).send(error.message);
         if(!this.lastID) res.json({ message: "No se pudo abrir el estacionamiento" });
@@ -83,7 +83,7 @@ const cerrar = async (req, res) => {
 
         // Hago el cierre de la cochera
         await db.run(
-          `UPDATE ${tabla} SET idUsuarioEgreso = ?, horaEgreso = DATETIME('now', 'localtime'), costo = ? WHERE id = ?`,[req.body.idUsuarioEgreso,costo,row.id],function(error) {
+          `UPDATE ${tabla} SET idUsuarioEgreso = ?, horaEgreso = DATETIME('now', 'localtime'), costo = ? WHERE id = ?`,[req.body.username,costo,row.id],function(error) {
             if(error) res.status(500).send(error.message);
             if(!this.changes) res.status(500).json({message:"Error indefinido cerrando cochera"})
             return res.json({ message: `Cochera para patente ${req.body.patente} cerrada con éxito`});  
