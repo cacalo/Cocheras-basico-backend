@@ -23,7 +23,7 @@ const abrir = async (req, res) => {
   try{
     if(!req.body.patente) return res.json({message:"Falta el valor de patente"});
     if(!req.body.username) return res.json({message:"Falta el valor de idUsuarioIngreso"});
-    if(!req.body.idCochera) return res.json({message:"Falta el valor de idCochera"});
+    if(!req.body.idCochera !== undefined) return res.json({message:"Falta el valor de idCochera"});
                 
     await db.get(`SELECT * from ${tabla} WHERE (eliminado IS NOT 1) AND (idCochera = ?) AND (horaEgreso IS NULL)`,req.body.idCochera, async (error,row)=>{
       if (error) return res.status(500).send(error.message);
@@ -47,7 +47,6 @@ const abrir = async (req, res) => {
 const cerrar = async (req, res) => {
   try {
     if(!req.body.patente) return res.json({message:"Falta el valor de patente"});
-    if(!req.body.idUsuarioEgreso) return res.json({message:"Falta el valor de idUsuarioEgreso"});
 
     //Busco que haya una cochera abierta para la patente buscada
     await db.get(`SELECT * from ${tabla} WHERE (eliminado IS NOT 1) AND (patente = ?) AND (horaEgreso IS NULL)`,req.body.patente, async (error,row)=>{
