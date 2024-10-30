@@ -22,7 +22,7 @@ const getById = async (req, res) => {
 const abrir = async (req, res) => {
   try{
     if(!req.body.patente) return res.json({message:"Falta el valor de patente"});
-    if(!req.body.username) return res.json({message:"Falta el valor de idUsuarioIngreso"});
+    if(!req.body.idUsuarioIngreso) return res.json({message:"Falta el valor de idUsuarioIngreso"});
     if(!req.body.idCochera) return res.json({message:"Falta el valor de idCochera"});
                 
     await db.get(`SELECT * from ${tabla} WHERE (eliminado IS NOT 1) AND (idCochera = ?) AND (horaEgreso IS NULL)`,req.body.idCochera, async (error,row)=>{
@@ -31,7 +31,7 @@ const abrir = async (req, res) => {
       await db.run(`INSERT into ${tabla} (patente, idCochera, idUsuarioIngreso, horaIngreso) VALUES (?, ?, ?, DATETIME('now', 'localtime'))`,
         [req.body.patente,
         req.body.idCochera,
-        req.body.idUsuarioIngreso],
+        req.body.username],
         function (error) {
         if (error) return res.status(500).send(error.message);
         if(!this.lastID) res.json({ message: "No se pudo abrir el estacionamiento" });
@@ -47,7 +47,7 @@ const abrir = async (req, res) => {
 const cerrar = async (req, res) => {
   try {
     if(!req.body.patente) return res.json({message:"Falta el valor de patente"});
-    if(!req.body.idUsuarioEgreso) return res.json({message:"Falta el valor de idUsuarioEgreso"});
+    if(!req.body.username) return res.json({message:"Falta el valor de idUsuarioEgreso"});
 
     //Busco que haya una cochera abierta para la patente buscada
     await db.get(`SELECT * from ${tabla} WHERE (eliminado IS NOT 1) AND (patente = ?) AND (horaEgreso IS NULL)`,req.body.patente, async (error,row)=>{
